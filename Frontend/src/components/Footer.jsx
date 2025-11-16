@@ -6,7 +6,7 @@ export default function Footer(){
     <footer className="foot">
       <div className="foot-inner">
         <div className="foot-brand">
-          <img src="/logo-mark.png" alt="HomeAura" />
+          <img src="/logo.png" alt="HomeAura" />
           <p>HomeAura helps you plan, design and build beautiful interiors with transparent pricing.</p>
           <div className="apps">
             <a href="#" aria-label="Google Play">📱 Google Play</a>
