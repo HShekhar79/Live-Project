@@ -1,4 +1,5 @@
 // src/components/LocationMap.jsx
+import React from "react";
 import { useEffect, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
