@@ -11,7 +11,12 @@ export default function Home() {
         <div className="hero-inner">
           <h1>Curious about your dream home price?</h1>
           <p>Get an accurate estimate based on size, location and key home details.</p>
-          <a className="cta" href="#price-calculators">Get Started</a>
+          <a className="cta" href="#price-calculators" onClick={(e) => {
+    e.preventDefault();
+    document
+      .querySelector("#price-calculators")
+      .scrollIntoView({ behavior: "smooth" });
+  }}>Get Started</a>
         </div>
       </section>
 

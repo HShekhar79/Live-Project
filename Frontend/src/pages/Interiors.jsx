@@ -1,5 +1,6 @@
 // src/pages/Interiors.jsx
 import "./Interiors.css";
+import { Link } from "react-router-dom";
 
 export default function Interiors() {
   return (
@@ -82,6 +83,11 @@ export default function Interiors() {
             <p>Our experts assemble and finish everything on-site.</p>
           </div>
         </div>
+        <button
+  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+>
+  <Link to="/interior-editor">Open 3D Interior Editor</Link>
+</button>
       </section>
     </div>
   );

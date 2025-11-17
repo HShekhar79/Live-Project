@@ -10,6 +10,7 @@ import Designers from "./pages/Designers.jsx";
 import PriceCalculator from "./pages/PriceCalculator.jsx"; // ✅ new import
 import Interiors from "./pages/Interiors";
 import Furnishings from "./pages/Furnishings";
+import ThreeDEditor from "./pages/ThreeDEditor.jsx";
 // import ModularJourney from "./pages/ModularJourney.jsx";
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
     <>
       <Navbar />
       <Routes>
+        <Route path="/interior-editor" element={<ThreeDEditor />} />
         <Route path="/" element={<Home />} />
         <Route path="/designers" element={<Designers />} />
         <Route path="/price-calculator" element={<PriceCalculator />} /> {/* ✅ route */}
