@@ -4,6 +4,7 @@ import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls, TransformControls } from "@react-three/drei";
 import { create } from "zustand";
 import { GLTFExporter } from "three-stdlib";
+import EditorLayout from "../layouts/EditorLayout";
 
 // ---------------------------
 //  STORE
@@ -306,6 +307,19 @@ function exportJSON() {
   a.click();
 }
 
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    const data = JSON.parse(reader.result);
+    usePlanStore.setState(data); // directly loads it into the editor
+  };
+  reader.readAsText(file);
+}
+
+
 // ---------------------------
 //  MAIN COMPONENT
 // ---------------------------
@@ -319,51 +333,108 @@ export default function ThreeDEditor() {
   const [mode, setMode] = useState("wall");
 
   return (
-    <div>
-      {/* Toolbar */}
-      <div style={{ padding: 10, display: "flex", gap: 10 }}>
+  <EditorLayout
+    title="3D Home Layout Editor"
+    sidebar={
+      <>
         <button type="button" onClick={() => setMode("wall")}>Draw Wall</button>
         <button type="button" onClick={() => setMode("door")}>Add Door</button>
         <button type="button" onClick={() => setMode("window")}>Add Window</button>
 
-        <button onClick={() => exportGLTF(sceneRef.current)} style={{ marginLeft: "auto" }}>
+        <button type="button" onClick={() => exportGLTF(sceneRef.current)}>
           Export GLTF
         </button>
-        <button onClick={exportJSON}>Export JSON</button>
-
-        <button
-          onClick={deleteSelected}
-          style={{ background: "#ef4444", color: "white" }}>
-          Delete
+        <button type="button" onClick={exportJSON}>
+          Export JSON
         </button>
-      </div>
+        <label style={{ cursor: "pointer" }}>
+  <span style={{ padding: "6px 10px", border: "1px solid #ddd", display: "inline-block" }}>
+    Import JSON
+  </span>
+  <input type="file" accept=".json" onChange={importJSON} style={{ display: "none" }} />
+</label>
 
-      {/* 3D Canvas */}
-      <div style={{ height: "450px", width: "85%" }}>
-        <Canvas
-          camera={{ position: [5, 5, 5], fov: 50 }}
-          onCreated={({ scene }) => (sceneRef.current = scene)}
-        >
-          <ambientLight intensity={0.6} />
-          <directionalLight position={[10, 10, 10]} />
+        <button type="button" onClick={deleteSelected} style={{ background: "#ef4444", color: "white" }}>
+          Delete Selected
+        </button>
+      </>
+    }
+  >
+    <div style={{ height: "100%", width: "100%" }}>
+      <Canvas
+        camera={{ position: [5, 5, 5], fov: 50 }}
+        onCreated={({ scene }) => (sceneRef.current = scene)}
+      >
+        <ambientLight intensity={0.6} />
+        <directionalLight position={[10, 10, 10]} />
 
-          <OrbitControls />
+        <OrbitControls />
 
-          <EditorFloor mode={mode} />
+        <EditorFloor mode={mode} />
 
-          {walls.map((w, i) => (
-            <Wall key={i} {...w} index={i} />
-          ))}
-          {doors.map((d, i) => (
-            <Door key={i} pos={d.pos} index={i} />
-          ))}
-          {windows.map((w, i) => (
-            <WindowItem key={i} pos={w.pos} index={i} />
-          ))}
+        {walls.map((w, i) => (
+          <Wall key={i} {...w} index={i} />
+        ))}
+        {doors.map((d, i) => (
+          <Door key={i} pos={d.pos} index={i} />
+        ))}
+        {windows.map((w, i) => (
+          <WindowItem key={i} pos={w.pos} index={i} />
+        ))}
 
-          <SelectionController />
-        </Canvas>
-      </div>
+        <SelectionController />
+      </Canvas>
     </div>
-  );
+  </EditorLayout>
+);
+
+
+//   return (
+//     <div>
+//       {/* Toolbar */}
+//       <div style={{ padding: 10, display: "flex", gap: 10 }}>
+//         <button type="button" onClick={() => setMode("wall")}>Draw Wall</button>
+//         <button type="button" onClick={() => setMode("door")}>Add Door</button>
+//         <button type="button" onClick={() => setMode("window")}>Add Window</button>
+
+//         <button onClick={() => exportGLTF(sceneRef.current)} style={{ marginLeft: "auto" }}>
+//           Export GLTF
+//         </button>
+//         <button onClick={exportJSON}>Export JSON</button>
+
+//         <button
+//           onClick={deleteSelected}
+//           style={{ background: "#ef4444", color: "white" }}>
+//           Delete
+//         </button>
+//       </div>
+
+//       {/* 3D Canvas */}
+//       <div style={{ height: "450px", width: "85%" }}>
+//         <Canvas
+//           camera={{ position: [5, 5, 5], fov: 50 }}
+//           onCreated={({ scene }) => (sceneRef.current = scene)}
+//         >
+//           <ambientLight intensity={0.6} />
+//           <directionalLight position={[10, 10, 10]} />
+
+//           <OrbitControls />
+
+//           <EditorFloor mode={mode} />
+
+//           {walls.map((w, i) => (
+//             <Wall key={i} {...w} index={i} />
+//           ))}
+//           {doors.map((d, i) => (
+//             <Door key={i} pos={d.pos} index={i} />
+//           ))}
+//           {windows.map((w, i) => (
+//             <WindowItem key={i} pos={w.pos} index={i} />
+//           ))}
+
+//           <SelectionController />
+//         </Canvas>
+//       </div>
+//     </div>
+//   );
 }
