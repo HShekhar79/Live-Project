@@ -1,20 +1,16 @@
-import React from 'react'
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import { ThemeProvider } from './context/ThemeContext'
-import DarkModeButton from './components/DarkModeButton.jsx'
-import App from './App.jsx'
-import AuthProvider from './context/authContext.jsx'
+// src/main.jsx
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import App from "./App.jsx";
+import IndexStyles from "./styles/IndexStyles.jsx";
+import "leaflet/dist/leaflet.css";
 
-createRoot(document.getElementById('root')).render(
-  
-  <AuthProvider>
-    <ThemeProvider>
-      < DarkModeButton />
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <IndexStyles />
     <BrowserRouter>
       <App />
     </BrowserRouter>
-    </ThemeProvider>
-    </AuthProvider>
-)
+  </React.StrictMode>
+);

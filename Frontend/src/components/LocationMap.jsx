@@ -1,56 +1,69 @@
 // src/components/LocationMap.jsx
-import React from "react";
-import { useEffect, useMemo } from "react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { useEffect } from "react";
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 
-// Fix default marker icon path in Vite
+/* Marker fix */
 const markerIcon = new L.Icon({
-  iconUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  shadowUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
 });
 
-function ClickHandler({ onClick }) {
+/* 👇 This component updates map when city changes */
+function RecenterMap({ center }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (center) {
+      map.setView(center, 11, { animate: true });
+    }
+  }, [center, map]);
+
+  return null;
+}
+
+/* Click handler */
+function ClickHandler({ setPosition }) {
   useMapEvents({
     click(e) {
-      onClick([e.latlng.lat, e.latlng.lng]);
+      setPosition([e.latlng.lat, e.latlng.lng]);
     },
   });
   return null;
 }
 
-export default function LocationMap({ center, position, setPosition, height = 360 }) {
-  // memoize center so the map doesn’t fully remount on other state changes
-  const initial = useMemo(() => center, [center]);
-
+export default function LocationMap({
+  center,
+  position,
+  setPosition,
+  height = 360,
+}) {
   return (
     <div className="pc-map" style={{ height }}>
       <MapContainer
-        center={initial}
+        center={center}
         zoom={11}
         style={{ height: "100%", width: "100%" }}
-        scrollWheelZoom={true}
       >
         <TileLayer
-          attribution='&copy; OpenStreetMap contributors'
+          attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        <ClickHandler onClick={(latlng) => setPosition(latlng)} />
+        {/* 🔥 Auto move map on city change */}
+        <RecenterMap center={center} />
+
+        {/* Click to set marker */}
+        <ClickHandler setPosition={setPosition} />
 
         {position && (
           <Marker
             position={position}
             icon={markerIcon}
-            draggable={true}
+            draggable
             eventHandlers={{
               dragend: (e) => {
                 const { lat, lng } = e.target.getLatLng();

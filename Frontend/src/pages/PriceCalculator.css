@@ -84,7 +84,7 @@
 }
 .pc-summary h3{ margin:0 0 6px; font-size:16px; color:#cfd9e8 }
 .pc-price{
-  font-size:28px; font-weight:800; letter-spacing:.2px; margin:2px 0 6px;
+  font-size:28px; font-weight:800; letter-spacing:.2px; margin:2px 0 6px; color: #ffffff;
 }
 .pc-band{ color:var(--muted); margin-bottom:6px }
 .pc-sub{ margin:0 0 14px; color:#cfd9e8 }

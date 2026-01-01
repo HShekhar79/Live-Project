@@ -32,7 +32,7 @@ const PYTHON_API_URL = process.env.PYTHON_API_URL || "http://localhost:5000";
 
 console.log("Python backend used =", PYTHON_API_URL);
 
-router.post("/predict", async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const pythonResp = await axios.post(
       `${PYTHON_API_URL}/predict`,
