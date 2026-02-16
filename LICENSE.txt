@@ -1,0 +1,13 @@
+Copyright (c) 2026 Himanshu Shekhar, Shivam Misra
+
+All Rights Reserved.
+
+This project is the intellectual property of Himanshu Shekhar and Shivam Misra.
+This repository is shared only for academic and team collaboration purposes.
+
+No person is allowed to copy, modify, redistribute, publish, or submit this
+project as their own work without explicit written permission from the owners.
+
+Unauthorized sharing outside the official team is strictly prohibited.
+
+For permission requests, contact the original authors.
