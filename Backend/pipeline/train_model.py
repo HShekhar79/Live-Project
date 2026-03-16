@@ -1,92 +1,96 @@
-# train_model.py
+"""
+train_model.py  —  HomeAura ML Pipeline
+Dataset : ../../Data/india_housing_realistic.csv  (30 000 rows)
+Target  : Price_in_Lakhs
+R²      : ~0.85  |  MAE : ~44 Lakhs
+"""
+
 import pandas as pd
-import joblib
+import numpy as np
+from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.metrics import mean_absolute_error, r2_score
+from sklearn.metrics import r2_score, mean_absolute_error
+import pickle, os, time
 
-# -----------------------------------------------------------
-# 1. Load your cleaned dataset
-# -----------------------------------------------------------
-df = pd.read_csv("house_price_cleaned.csv")  
-# Make sure this CSV contains columns:
-# BHK_NO., SQUARE_FT, UNDER_CONSTRUCTION, RERA, READY_TO_MOVE, RESALE
-# LATITUDE, LONGITUDE, city, seller_type, TARGET_PRICE (in lacs)
+# ── Paths ──────────────────────────────────────────────────────────
+BASE_DIR    = os.path.dirname(__file__)
+DATA_PATH   = os.path.join(BASE_DIR, "../../Data/india_housing_realistic.csv")
+MODEL_PATH  = os.path.join(BASE_DIR, "house_price_model.pkl")
+SCALER_PATH = os.path.join(BASE_DIR, "scaler.pkl")
+FEAT_PATH   = os.path.join(BASE_DIR, "feature_columns.pkl")
 
-# -----------------------------------------------------------
-# 2. One-hot Encoding (Cities + Seller Type)
-# -----------------------------------------------------------
+# ── Load ───────────────────────────────────────────────────────────
+df = pd.read_csv(DATA_PATH)
+print(f"Loaded {len(df):,} rows, {df.shape[1]} columns")
 
-CITY_COLUMNS = [
-    'Bangalore','Chennai','Ghaziabad','Jaipur','Kolkata',
-    'Lalitpur','Maharashtra','Mumbai','Noida','Other','Pune'
-]
+# ── Feature engineering ────────────────────────────────────────────
+# Drop leaky / identifier columns
+df.drop(columns=["ID", "Locality", "Price_per_SqFt"], inplace=True)
 
-SELLER_COLUMNS = ['Builder', 'Dealer', 'Owner']
+# Amenities → count
+df["Amenities_Count"] = df["Amenities"].apply(
+    lambda x: len(str(x).split(",")) if pd.notna(x) and str(x).strip() != "" else 0
+)
+df.drop(columns=["Amenities"], inplace=True)
 
-# Create missing city/seller columns if not present
-for col in CITY_COLUMNS + SELLER_COLUMNS:
-    df[col] = 0
+# Ordinal encode string ordinals (Low/Medium/High etc.)
+ORDINAL = {
+    "Public_Transport_Accessibility": {"Low": 0, "Medium": 1, "High": 2},
+    "Parking_Space":                  {"None": 0, "Single": 1, "Double": 2},
+    "Security":                       {"Low": 0, "Medium": 1, "High": 2},
+}
+for col, mapping in ORDINAL.items():
+    df[col] = df[col].map(mapping)
 
-# Fill city columns
-for i, row in df.iterrows():
-    col = row["city"] if row["city"] in CITY_COLUMNS else "Other"
-    df.at[i, col] = 1
+# One-hot encode remaining categoricals
+cat_cols = df.select_dtypes(include=["object", "bool", "str"]).columns.tolist()
+df = pd.get_dummies(df, columns=cat_cols)
 
-# Fill seller type columns
-for i, row in df.iterrows():
-    col = row["seller_type"] if row["seller_type"] in SELLER_COLUMNS else "Owner"
-    df.at[i, col] = 1
+# Safety net — coerce any remaining non-numeric to 0
+df = df.apply(pd.to_numeric, errors="coerce").fillna(0)
 
-# -----------------------------------------------------------
-# 3. Select Features
-# -----------------------------------------------------------
-FEATURE_COLUMNS = [
-    'UNDER_CONSTRUCTION', 'RERA', 'BHK_NO.', 'SQUARE_FT', 'READY_TO_MOVE',
-    'RESALE', 'LONGITUDE', 'LATITUDE',
-] + CITY_COLUMNS + SELLER_COLUMNS
+# ── Split ──────────────────────────────────────────────────────────
+X = df.drop(columns=["Price_in_Lakhs"])
+y = df["Price_in_Lakhs"]
 
-X = df[FEATURE_COLUMNS]
-y = df["TARGET_PRICE"]   # Price in lacs
-
-# -----------------------------------------------------------
-# 4. Train-Test Split
-# -----------------------------------------------------------
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
 
-# -----------------------------------------------------------
-# 5. Scaling
-# -----------------------------------------------------------
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
+# ── Scale ──────────────────────────────────────────────────────────
+scaler    = StandardScaler()
+X_train_s = scaler.fit_transform(X_train)
+X_test_s  = scaler.transform(X_test)
 
-# -----------------------------------------------------------
-# 6. Train Model
-# -----------------------------------------------------------
+print(f"Features : {X_train.shape[1]}")
+print(f"Train    : {X_train.shape[0]}  |  Test : {X_test.shape[0]}")
+
+# ── Train ──────────────────────────────────────────────────────────
+t0 = time.time()
 model = GradientBoostingRegressor(
-    n_estimators=300,
+    n_estimators=400,
     learning_rate=0.05,
-    max_depth=4,
-    random_state=42
+    max_depth=5,
+    subsample=0.8,
+    min_samples_leaf=10,
+    random_state=42,
+    verbose=1,
 )
+model.fit(X_train_s, y_train)
+print(f"\nTrained in {time.time() - t0:.1f}s")
 
-model.fit(X_train_scaled, y_train)
+# ── Evaluate ───────────────────────────────────────────────────────
+preds = model.predict(X_test_s)
+r2    = r2_score(y_test, preds)
+mae   = mean_absolute_error(y_test, preds)
+print(f"R²  = {r2:.4f}")
+print(f"MAE = ₹{mae:.2f} Lakhs")
 
-# -----------------------------------------------------------
-# 7. Evaluate Model
-# -----------------------------------------------------------
-preds = model.predict(X_test_scaled)
-print("MAE:", mean_absolute_error(y_test, preds))
-print("R²:", r2_score(y_test, preds))
-
-# -----------------------------------------------------------
-# 8. Save Model + Scaler
-# -----------------------------------------------------------
-joblib.dump(model, "house_price_model.pkl")
-joblib.dump(scaler, "scaler.pkl")
-
-print("\nModel and scaler saved successfully!")
+# ── Save ───────────────────────────────────────────────────────────
+with open(MODEL_PATH,  "wb") as f: pickle.dump(model, f)
+with open(SCALER_PATH, "wb") as f: pickle.dump(scaler, f)
+with open(FEAT_PATH,   "wb") as f: pickle.dump(list(X.columns), f)
+print(f"\nSaved → {MODEL_PATH}")
+print(f"Saved → {SCALER_PATH}")
+print(f"Saved → {FEAT_PATH}")
